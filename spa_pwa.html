@@ -179,8 +179,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             background: white;
             border-radius: 8px;
             border: 2px solid transparent;
@@ -190,6 +190,7 @@
 
         .server-option:hover {
             border-color: #4CAF50;
+            transform: translateY(-1px);
         }
 
         .server-option.active {
@@ -274,6 +275,39 @@
         .screen.active {
             display: block;
         }
+
+        .manual-server {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .manual-server input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-right: 8px;
+            flex: 1;
+        }
+
+        .manual-server button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -302,8 +336,21 @@
                 <div class="server-list">
                     <h4 style="margin-bottom: 10px; color: #333;">📡 Chọn Server:</h4>
                     <div id="serverList">
-                        <!-- Server options will be populated here -->
+                        <div style="text-align: center; padding: 20px; color: #666;">
+                            🔍 Đang quét server...
+                        </div>
                     </div>
+                    
+                    <!-- Manual server input -->
+                    <div class="manual-server">
+                        <h5 style="margin-bottom: 8px; color: #856404;">🔧 Nhập thủ công:</h5>
+                        <div class="flex-row">
+                            <input type="text" id="manualServerUrl" placeholder="http://192.168.1.100:5000" 
+                                   style="flex: 1;">
+                            <button onclick="testManualServer()">Test</button>
+                        </div>
+                    </div>
+                    
                     <button onclick="scanServers()" style="margin-top: 10px; padding: 8px 16px; background: #2196F3; color: white; border: none; border-radius: 5px; font-size: 12px; width: 100%;">🔍 Quét lại Server</button>
                 </div>
 
@@ -392,18 +439,433 @@
         let currentEmployee = null;
         let serverOptions = [];
 
-        // Generate common server URLs to test
-        function generateServerUrls() {
+        // Generate SMART list of common server URLs (limited)
+        function generateSmartServerUrls() {
             const urls = [
+                // Localhost variants
                 'http://localhost:5000',
-                'https://localhost:5000',
+                'http://127.0.0.1:5000',
+                
+                // Common router IPs
+                'http://192.168.1.1:5000',
+                'http://192.168.0.1:5000',
+                'http://192.168.100.1:5000',
+                'http://10.0.0.1:5000',
             ];
 
-            // Add common local network IPs
-            const commonIPs = [
-                '192.168.1.', '192.168.0.', '192.168.100.', 
-                '10.0.0.', '172.16.0.'
-            ];
+            // Add only 10 most common IPs for each subnet to avoid timeout
+            const commonSubnets = ['192.168.1.', '192.168.0.', '192.168.100.'];
+            const commonLastOctets = [100, 101, 102, 143, 150, 200, 201, 2, 3, 4]; // Most common IPs
+            
+            commonSubnets.forEach(subnet => {
+                commonLastOctets.forEach(lastOctet => {
+                    urls.push(`http://${subnet}${lastOctet}:5000`);
+                });
+            });
 
-            commonIPs.forEach(baseIP => {
-                for
+            return urls;
+        }
+
+        // Test a single server URL with faster timeout
+        async function testServer(url, timeout = 2000) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                
+                const response = await fetch(`${url}/`, {
+                    method: 'GET',
+                    signal: controller.signal,
+                    mode: 'cors'
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return {
+                        url,
+                        status: 'online',
+                        response: data
+                    };
+                }
+                
+                return { url, status: 'offline', error: `HTTP ${response.status}` };
+            } catch (error) {
+                return { 
+                    url, 
+                    status: 'offline', 
+                    error: error.name === 'AbortError' ? 'Timeout' : 'Failed' 
+                };
+            }
+        }
+
+        // FAST server scanning - test in parallel with smaller list
+        async function scanServers() {
+            updateConnectionStatus('testing', '🔍 Đang quét server...');
+            showMessage('loginMessage', '🔍 Tìm server (chỉ 10 giây)...', 'success');
+            
+            const urls = generateSmartServerUrls();
+            const serverList = document.getElementById('serverList');
+            serverList.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Đang quét...</div>';
+            
+            serverOptions = [];
+            
+            console.log(`🔍 Testing ${urls.length} potential servers...`);
+            
+            // Test all URLs in parallel (faster than sequential)
+            const promises = urls.map(url => testServer(url, 2000)); // 2 second timeout
+            const results = await Promise.allSettled(promises);
+            
+            results.forEach((result, index) => {
+                if (result.status === 'fulfilled' && result.value.status === 'online') {
+                    serverOptions.push(result.value);
+                    console.log(`✅ Found server: ${result.value.url}`);
+                }
+            });
+            
+            updateServerList();
+            
+            if (serverOptions.length === 0) {
+                updateConnectionStatus('offline', '❌ Không tìm thấy server');
+                showMessage('loginMessage', '❌ Không tìm thấy server. Thử nhập thủ công IP bên dưới.', 'error');
+            } else {
+                updateConnectionStatus('online', `✅ Tìm thấy ${serverOptions.length} server`);
+                showMessage('loginMessage', `✅ Tìm thấy ${serverOptions.length} server!`, 'success');
+                // Auto-select first server
+                selectServer(serverOptions[0].url);
+            }
+        }
+
+        // Test manual server
+        async function testManualServer() {
+            const url = document.getElementById('manualServerUrl').value.trim();
+            if (!url) {
+                showMessage('loginMessage', 'Nhập URL server', 'error');
+                return;
+            }
+            
+            updateConnectionStatus('testing', '🔄 Đang test server...');
+            
+            const result = await testServer(url, 5000);
+            
+            if (result.status === 'online') {
+                serverOptions.push(result);
+                updateServerList();
+                selectServer(url);
+                showMessage('loginMessage', '✅ Server manual hoạt động!', 'success');
+            } else {
+                updateConnectionStatus('offline', '❌ Server không hoạt động');
+                showMessage('loginMessage', `❌ Không thể kết nối: ${result.error}`, 'error');
+            }
+        }
+
+        // Update server list UI
+        function updateServerList() {
+            const serverList = document.getElementById('serverList');
+            
+            if (serverOptions.length === 0) {
+                serverList.innerHTML = '<div style="text-align: center; color: #999;">Chưa tìm thấy server nào</div>';
+                return;
+            }
+            
+            serverList.innerHTML = serverOptions.map(server => `
+                <div class="server-option ${API_BASE === server.url ? 'active' : ''}" 
+                     onclick="selectServer('${server.url}')">
+                    <div>
+                        <strong>${getServerDisplayName(server.url)}</strong>
+                        <br>
+                        <small style="color: #666;">${server.url}</small>
+                    </div>
+                    <div class="server-status online">
+                        🟢 Online
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get display name for server
+        function getServerDisplayName(url) {
+            if (url.includes('localhost') || url.includes('127.0.0.1')) return '💻 Local (Desktop)';
+            if (url.includes('192.168.1.')) return '🏠 WiFi Network';
+            if (url.includes('192.168.0.')) return '🏠 Home Router';
+            if (url.includes('192.168.100.')) return '🏢 Office Network';
+            if (url.includes('10.0.0.')) return '🏢 Corporate';
+            return '🌐 Network Server';
+        }
+
+        // Select a server
+        function selectServer(url) {
+            API_BASE = url;
+            localStorage.setItem('spa_api_base', url);
+            updateServerList();
+            updateConnectionStatus('online', `✅ ${getServerDisplayName(url)}`);
+            showMessage('loginMessage', `✅ Đã chọn: ${getServerDisplayName(url)}`, 'success');
+        }
+
+        // Connection status management
+        function updateConnectionStatus(status, message) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = `connection-status ${status}`;
+            statusEl.textContent = message;
+            
+            if (status === 'online') {
+                setTimeout(() => statusEl.style.opacity = '0.7', 3000);
+            }
+        }
+
+        // Enhanced API call
+        async function apiCall(endpoint, method = 'GET', data = null, timeout = 10000) {
+            if (!API_BASE) {
+                throw new Error('Chưa chọn server');
+            }
+
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const config = {
+                method,
+                headers,
+                signal: AbortSignal.timeout(timeout)
+            };
+
+            if (data) {
+                config.body = JSON.stringify(data);
+            }
+
+            const url = `${API_BASE}${endpoint}`;
+
+            try {
+                console.log(`API Call: ${method} ${url}`);
+                
+                const response = await fetch(url, config);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('Response:', result);
+                
+                return result;
+            } catch (error) {
+                console.error('API Error:', error);
+                
+                let errorMessage = 'Lỗi không xác định';
+                
+                if (error.name === 'TimeoutError') {
+                    errorMessage = 'Timeout - Server không phản hồi';
+                } else if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Không thể kết nối server';
+                } else if (error.message.includes('HTTP')) {
+                    errorMessage = `Server error: ${error.message}`;
+                } else {
+                    errorMessage = error.message;
+                }
+                
+                return { error: errorMessage };
+            }
+        }
+
+        // Utility functions
+        function showMessage(elementId, message, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => element.innerHTML = '', 5000);
+        }
+
+        function showLoading(show = true) {
+            const btn = document.getElementById('loginBtn');
+            const text = document.getElementById('loginBtnText');
+            const spinner = document.getElementById('loginSpinner');
+            
+            if (show) {
+                text.classList.add('hidden');
+                spinner.classList.remove('hidden');
+                btn.disabled = true;
+            } else {
+                text.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+
+        // Login function
+        async function login() {
+            const code = document.getElementById('loginCode').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+
+            if (!code || !pin) {
+                showMessage('loginMessage', 'Vui lòng nhập đầy đủ thông tin', 'error');
+                return;
+            }
+
+            if (!API_BASE) {
+                showMessage('loginMessage', 'Vui lòng chọn server trước', 'error');
+                return;
+            }
+
+            showLoading(true);
+            showMessage('loginMessage', '🔄 Đang đăng nhập...', 'success');
+
+            const result = await apiCall('/login', 'POST', {
+                code: code,
+                pin_code: pin
+            });
+
+            showLoading(false);
+
+            if (result.token) {
+                authToken = result.token;
+                currentEmployee = result.employee;
+                
+                localStorage.setItem('spa_token', authToken);
+                localStorage.setItem('spa_employee', JSON.stringify(currentEmployee));
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                
+                refreshDashboard();
+                showMessage('loginMessage', '✅ Đăng nhập thành công!', 'success');
+            } else {
+                showMessage('loginMessage', result.error || 'Sai mã nhân viên hoặc PIN', 'error');
+            }
+        }
+
+        // Logout function
+        function logout() {
+            authToken = null;
+            currentEmployee = null;
+            localStorage.removeItem('spa_token');
+            localStorage.removeItem('spa_employee');
+            
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            
+            document.getElementById('loginCode').value = 'EMP001';
+            document.getElementById('loginPin').value = '1234';
+        }
+
+        // Auto-login from localStorage
+        function autoLogin() {
+            const token = localStorage.getItem('spa_token');
+            const employee = localStorage.getItem('spa_employee');
+            const apiBase = localStorage.getItem('spa_api_base');
+            
+            if (token && employee && apiBase) {
+                authToken = token;
+                currentEmployee = JSON.parse(employee);
+                API_BASE = apiBase;
+                
+                // Add to server options for UI
+                serverOptions = [{ url: apiBase, status: 'online' }];
+                updateServerList();
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                
+                refreshDashboard();
+                updateConnectionStatus('online', `✅ ${getServerDisplayName(apiBase)}`);
+                return true;
+            }
+            return false;
+        }
+
+        // Show screen function
+        function showScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(screenName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (screenName === 'dashboard') refreshDashboard();
+        }
+
+        // Refresh dashboard
+        async function refreshDashboard() {
+            const data = await apiCall('/dashboard/');
+            if (data && !data.error) {
+                document.getElementById('todayCheckins').textContent = data.today_checkins || 0;
+                document.getElementById('activeSessions').textContent = data.active_sessions || 0;
+                document.getElementById('totalEmployees').textContent = data.total_employees || 0;
+            }
+        }
+
+        // Quick checkin
+        async function quickCheckin() {
+            if (!currentEmployee) {
+                showMessage('loginMessage', 'Chưa đăng nhập', 'error');
+                return;
+            }
+            
+            const result = await apiCall('/checkin/', 'POST', {
+                employee_code: currentEmployee.code,
+                pin_code: '1234'
+            });
+
+            if (result.message) {
+                showMessage('loginMessage', result.message, 'success');
+                refreshDashboard();
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            } else {
+                showMessage('loginMessage', result.error || 'Lỗi chấm công', 'error');
+            }
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateString = now.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit'
+            });
+            
+            const timeEl = document.getElementById('currentTime');
+            if (timeEl) {
+                timeEl.textContent = `${timeString} ${dateString}`;
+            }
+        }
+
+        // Handle Enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('loginScreen').classList.contains('hidden')) {
+                login();
+            }
+        });
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // Try auto-login first
+            const hasAutoLogin = autoLogin();
+            
+            // If no auto-login, start FAST scanning
+            if (!hasAutoLogin) {
+                setTimeout(scanServers, 500); // Quick start
+            }
+            
+            console.log('🚀 Optimized SPA PWA Started');
+            console.log('⚡ Fast server detection (10s max)');
+        });
+    </script>
+</body>
+</html>
