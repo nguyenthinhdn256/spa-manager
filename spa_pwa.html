@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spa Manager</title>
+    
+    <!-- PWA Meta tags -->
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Spa Manager">
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlNwYSBNYW5hZ2VyIiwKICAic2hvcnRfbmFtZSI6ICJTcGEiLAogICJkZXNjcmlwdGlvbiI6ICJIyeGbrCB0aOG7kW5nIHF1YW4gbMO9IG5ow6JuIHZpw6puIHNwYSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzRDQUY1MCIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1qUXdJaUJvWldsbmFIUTlJakkwTUNJZ2RtbGxkMEp2ZUQwaU1DQXdJakkwTUNBeU5EQWlJR1pwYkd3OUlpTTBRMEZHTlRBaVBnb2dJQ0E4Y21WamRDQjNhV1IwYUQwaU1qUXdJaUJvWldsbmFIUTlJakkwTUNJZ1ptbHNiRDBpSXprM1pETm1PQ0l2UGdvZ0lDQThkR1Y0ZENCNGJXbHVhRUZqZEdsdmJqMGljMmgxZEhSbGNtUnZkMjRpSUhjOUltMTVYREJUUkVGYmRGd3dYR2wwWVd4cFl5QTRNQ0JrWVhScFV6UWlJSGc5SWpFeU1DSWdlVDBpTVRJd0lpQm1hV3hzUFNJaVptWm1abVptSWlCbWIyNTBMWE5wZW1VOUlqVXdJaUJtYjI1MExYZGxhV2RvZEQwaWJtOXliV0ZzSWo1VFVFRmJkRnd3WEc0Z1UxQmI=IiwKICAgICAgInNpemVzIjogIjI0MHgyNDAiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDI0MCAyNDAiIGZpbGw9IiM0Q0FGNTAIPGO4RJDQ3MxWZHQ0PSJyZWN0IiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iIzk3ZDNmOCIvPgo8dGV4dCB4bWluYUFjdGlvbj0ic2h1dHRlcmRvd24iIHc9Im15XzBTREFbdFx3XGl0YWxpYyA4MCBkYXRpUzQiIHg9IjEyMCIgeT0iMTIwIiBmaWxsPSIjZmZmZmZmIiBmb250LXNpemU9IjUwIiBmb250LXdlaWdodD0ibm9ybWFsIj5TUEFbdFx3XG4gU1Bb">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all 0.3s;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            background: white;
+            border-bottom: 3px solid #4CAF50;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .nav-tab:active {
+            background: #e8e8e8;
+        }
+
+        .content {
+            padding: 15px;
+            min-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .login-form {
+            max-width: 320px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+        }
+
+        .form-group input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 8px;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        .btn:active {
+            background: #45a049;
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:active {
+            background: #da190b;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+        }
+
+        .btn-info {
+            background: #2196F3;
+        }
+
+        .btn-full {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2.2em;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .stat-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: white;
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .action-btn:active {
+            background: #4CAF50;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .beds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .bed-card {
+            padding: 20px 15px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .bed-card:active {
+            transform: scale(0.95);
+        }
+
+        .bed-available {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+
+        .bed-occupied {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+
+        .bed-cleaning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+        }
+
+        .employee-list, .report-content {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .employee-item, .report-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #4CAF50;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .employee-item h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .employee-item p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .message {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .beds-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .nav-tab {
+                font-size: 0.8em;
+                padding: 12px 8px;
+            }
+
+            .content {
+                padding: 10px;
+            }
+        }
+
+        /* PWA Install prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            z-index: 1001;
+        }
+
+        .install-prompt.show {
+            transform: translateY(0);
+        }
+
+        .install-btn {
+            background: white;
+            color: #4CAF50;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 SPA MANAGER</h1>
+            <p>Quản lý nhân viên spa</p>
+        </div>
+
+        <!-- Install Prompt -->
+        <div id="installPrompt" class="install-prompt">
+            <span>📱 Cài đặt app để sử dụng offline</span>
+            <button class="install-btn" onclick="installApp()">Cài đặt</button>
+            <button class="install-btn" onclick="hideInstallPrompt()" style="background: transparent; color: white;">Bỏ qua</button>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="content">
+            <div class="login-form">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Đăng nhập</h2>
+                <div class="form-group">
+                    <label>Mã nhân viên:</label>
+                    <input type="text" id="loginCode" placeholder="Ví dụ: EMP001" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>Mã PIN:</label>
+                    <input type="password" id="loginPin" placeholder="****" autocomplete="current-password">
+                </div>
+                <button class="btn btn-full" onclick="login()">
+                    <span id="loginBtnText">ĐĂNG NHẬP</span>
+                    <span id="loginSpinner" class="loading hidden"></span>
+                </button>
+                <div id="loginMessage"></div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="hidden">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showScreen('dashboard')">📊 Tổng quan</button>
+                <button class="nav-tab" onclick="showScreen('checkin')">⏰ Chấm công</button>
+                <button class="nav-tab" onclick="showScreen('beds')">🛏️ Giường</button>
+                <button class="nav-tab" onclick="showScreen('employees')">👥 NV</button>
+                <button class="nav-tab" onclick="showScreen('reports')">📋 Báo cáo</button>
+            </div>
+
+            <div class="content">
+                <!-- Dashboard -->
+                <div id="dashboard" class="screen active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3 id="todayCheckins">0</h3>
+                            <p>Chấm công hôm nay</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="activeSessions">0</h3>
+                            <p>Đang phục vụ</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="totalEmployees">0</h3>
+                            <p>Tổng nhân viên</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>🕐</h3>
+                            <p id="currentTime"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="action-grid">
+                        <div class="action-btn" onclick="quickCheckin()">
+                            ⚡ Chấm công nhanh
+                        </div>
+                        <div class="action-btn" onclick="showScreen('beds')">
+                            🛏️ Xem giường
+                        </div>
+                        <div class="action-btn" onclick="refreshDashboard()">
+                            🔄 Làm mới
+                        </div>
+                        <div class="action-btn" onclick="logout()">
+                            🚪 Đăng xuất
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Check-in -->
+                <div id="checkin" class="screen">
+                    <h2 style="margin-bottom: 25px;">⏰ Chấm công</h2>
+                    
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 15px;">Chấm công nhanh</h3>
+                        <button class="btn btn-full" onclick="quickCheckin()">⚡ CHẤM CÔNG NGAY</button>
+                    </div>
+
+                    <hr style="margin: 30px 0; border: 1px solid #eee;">
+
+                    <h3 style="margin-bottom: 15px;">Chấm công thủ công</h3>
+                    <div class="form-group">
+                        <label>Mã nhân viên:</label>
+                        <input type="text" id="checkinCode" placeholder="Nhập mã">
+                    </div>
+                    <div class="form-group">
+                        <label>Mã PIN:</label>
+                        <input type="password" id="checkinPin" placeholder="****">
+                    </div>
+                    <button class="btn btn-full" onclick="manualCheckin()">CHẤM CÔNG</button>
+                    <div id="checkinMessage"></div>
+                </div>
+
+                <!-- Beds -->
+                <div id="beds" class="screen">
+                    <h2 style="margin-bottom: 20px;">🛏️ Quản lý giường</h2>
+                    <div class="beds-grid" id="bedsGrid">
+                        <!-- Beds will be loaded here -->
+                    </div>
+                    <button class="btn btn-full" onclick="loadBeds()" style="margin-top: 20px;">🔄 Làm mới giường</button>
+                </div>
+
+                <!-- Employees -->
+                <div id="employees" class="screen">
+                    <h2 style="margin-bottom: 20px;">👥 Quản lý nhân viên</h2>
+                    <div class="employee-list" id="employeeList">
+                        <!-- Employees will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Reports -->
+                <div id="reports" class="screen">
+                    <h2 style="margin-bottom: 20px;">📋 Báo cáo</h2>
+                    <div class="action-grid">
+                        <div class="action-btn" onclick="viewSalary()">
+                            💰 Lương tháng này
+                        </div>
+                        <div class="action-btn" onclick="viewAttendance()">
+                            📅 Chấm công
+                        </div>
+                    </div>
+                    <div id="reportContent" class="report-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Refresh Button -->
+        <button class="refresh-btn hidden" id="refreshBtn" onclick="refreshCurrentScreen()">🔄</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://192.168.100.143:5000';
+        let authToken = null;
+        let currentEmployee = null;
+        let deferredPrompt = null;
+
+        // PWA Install functionality
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    hideInstallPrompt();
+                });
+            }
+        }
+
+        function hideInstallPrompt() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCJpbnN0YWxsIiwgZXZlbnQgPT4gewogICAgY29uc29sZS5sb2coIlNlcnZpY2UgV29ya2VyIGluc3RhbGxlZCIpOwp9KTs=')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+
+        // Utility functions
+        function showMessage(elementId, message, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => element.innerHTML = '', 5000);
+        }
+
+        function showLoading(buttonId, show = true) {
+            const button = document.getElementById(buttonId);
+            const text = button.querySelector('span:first-child');
+            const spinner = button.querySelector('.loading');
+            
+            if (show) {
+                text.classList.add('hidden');
+                spinner.classList.remove('hidden');
+                button.disabled = true;
+            } else {
+                text.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                button.disabled = false;
+            }
+        }
+
+        // API call helper with better error handling
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const config = {
+                method,
+                headers,
+            };
+
+            if (data) {
+                config.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, config);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                
+                if (error.message.includes('Failed to fetch')) {
+                    return { error: 'Không thể kết nối server. Kiểm tra backend đã chạy chưa.' };
+                }
+                
+                return { error: `Lỗi: ${error.message}` };
+            }
+        }
+
+        // Login with loading state
+        async function login() {
+            const code = document.getElementById('loginCode').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+
+            if (!code || !pin) {
+                showMessage('loginMessage', 'Vui lòng nhập đầy đủ thông tin', 'error');
+                return;
+            }
+
+            showLoading('loginBtnText', true);
+
+            const result = await apiCall('/login', 'POST', {
+                code: code,
+                pin_code: pin
+            });
+
+            showLoading('loginBtnText', false);
+
+            if (result.token) {
+                authToken = result.token;
+                currentEmployee = result.employee;
+                
+                // Store for offline use
+                localStorage.setItem('spa_token', authToken);
+                localStorage.setItem('spa_employee', JSON.stringify(currentEmployee));
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('refreshBtn').classList.remove('hidden');
+                
+                refreshDashboard();
+                showMessage('loginMessage', 'Đăng nhập thành công!', 'success');
+            } else {
+                showMessage('loginMessage', result.error || 'Sai mã nhân viên hoặc PIN', 'error');
+            }
+        }
+
+        // Logout
+        function logout() {
+            authToken = null;
+            currentEmployee = null;
+            localStorage.removeItem('spa_token');
+            localStorage.removeItem('spa_employee');
+            
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('refreshBtn').classList.add('hidden');
+            
+            document.getElementById('loginCode').value = '';
+            document.getElementById('loginPin').value = '';
+        }
+
+        // Auto-login from localStorage
+        function autoLogin() {
+            const token = localStorage.getItem('spa_token');
+            const employee = localStorage.getItem('spa_employee');
+            
+            if (token && employee) {
+                authToken = token;
+                currentEmployee = JSON.parse(employee);
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('refreshBtn').classList.remove('hidden');
+                
+                refreshDashboard();
+            }
+        }
+
+        // Show screen with better UX
+        function showScreen(screenName) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected screen
+            document.getElementById(screenName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Load data for specific screens
+            if (screenName === 'beds') loadBeds();
+            if (screenName === 'employees') loadEmployees();
+            if (screenName === 'dashboard') refreshDashboard();
+        }
+
+        // Refresh current screen
+        function refreshCurrentScreen() {
+            const activeScreen = document.querySelector('.screen.active');
+            if (activeScreen) {
+                const screenId = activeScreen.id;
+                if (screenId === 'dashboard') refreshDashboard();
+                if (screenId === 'beds') loadBeds();
+                if (screenId === 'employees') loadEmployees();
+            }
+        }
+
+        // Refresh dashboard
+        async function refreshDashboard() {
+            const data = await apiCall('/dashboard/');
+            if (data && !data.error) {
+                document.getElementById('todayCheckins').textContent = data.today_checkins || 0;
+                document.getElementById('activeSessions').textContent = data.active_sessions || 0;
+                document.getElementById('totalEmployees').textContent = data.total_employees || 0;
+            }
+        }
+
+        // Quick checkin with haptic feedback
+        async function quickCheckin() {
+            if (!currentEmployee) {
+                showMessage('checkinMessage', 'Chưa đăng nhập', 'error');
+                return;
+            }
+            
+            // Haptic feedback on mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+            const result = await apiCall('/checkin/', 'POST', {
+                employee_code: currentEmployee.code,
+                pin_code: '1234' // Demo PIN
+            });
+
+            if (result.message) {
+                showMessage('checkinMessage', result.message, 'success');
+                refreshDashboard();
+                
+                // Success haptic
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            } else {
+                showMessage('checkinMessage', result.error || 'Lỗi chấm công', 'error');
+            }
+        }
+
+        // Manual checkin
+        async function manualCheckin() {
+            const code = document.getElementById('checkinCode').value.trim();
+            const pin = document.getElementById('checkinPin').value.trim();
+
+            if (!code || !pin) {
+                showMessage('checkinMessage', 'Vui lòng nhập đầy đủ thông tin', 'error');
+                return;
+            }
+
+            const result = await apiCall('/checkin/', 'POST', {
+                employee_code: code,
+                pin_code: pin
+            });
+
+            if (result.message) {
+                showMessage('checkinMessage', result.message, 'success');
+                document.getElementById('checkinCode').value = '';
+                document.getElementById('checkinPin').value = '';
+                refreshDashboard();
+            } else {
+                showMessage('checkinMessage', result.error || 'Sai thông tin đăng nhập', 'error');
+            }
+        }
+
+        // Load beds with better UX
+        async function loadBeds() {
+            const bedsGrid = document.getElementById('bedsGrid');
+            bedsGrid.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><br>Đang tải...</div>';
+            
+            const beds = await apiCall('/beds/');
+            
+            if (beds && Array.isArray(beds)) {
+                bedsGrid.innerHTML = beds.map(bed => `
+                    <div class="bed-card bed-${bed.status}" onclick="manageBed(${bed.id}, '${bed.status}', '${bed.name}')">
+                        <h3>${bed.name}</h3>
+                        <p>${getStatusText(bed.status)}</p>
+                        ${bed.status === 'available' ? '<small>👆 Chạm để bắt đầu</small>' : ''}
+                    </div>
+                `).join('');
+            } else {
+                bedsGrid.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">❌ Không thể tải dữ liệu giường</div>';
+            }
+        }
+
+        // Get status text
+        function getStatusText(status) {
+            const statusMap = {
+                'available': '✅ Trống',
+                'occupied': '🔴 Đang sử dụng',
+                'cleaning': '🧹 Đang dọn dẹp'
+            };
+            return statusMap[status] || '❓ Không xác định';
+        }
+
+        // Manage bed with confirmation
+        async function manageBed(bedId, status, bedName) {
+            if (status === 'available' && currentEmployee) {
+                if (confirm(`Bắt đầu phục vụ tại ${bedName}?`)) {
+                    const result = await apiCall('/bed-sessions/', 'POST', {
+                        bed_id: bedId,
+                        employee_id: currentEmployee.id,
+                        service_type: 'Massage',
+                        tip_amount: 0
+                    });
+
+                    if (result.session_id) {
+                        showMessage('checkinMessage', `✅ Đã bắt đầu phục vụ tại ${bedName}!`, 'success');
+                        loadBeds();
+                        refreshDashboard();
+                        
+                        // Success haptic
+                        if (navigator.vibrate) {
+                            navigator.vibrate([100, 50, 100]);
+                        }
+                    } else {
+                        showMessage('checkinMessage', result.error || 'Không thể bắt đầu phục vụ', 'error');
+                    }
+                }
+            } else if (status !== 'available') {
+                showMessage('checkinMessage', `${bedName} hiện ${getStatusText(status).toLowerCase()}`, 'error');
+            }
+        }
+
+        // Load employees
+        async function loadEmployees() {
+            const employeeList = document.getElementById('employeeList');
+            
+            if (currentEmployee) {
+                employeeList.innerHTML = `
+                    <div class="employee-item">
+                        <h3>👤 ${currentEmployee.full_name}</h3>
+                        <p><strong>Mã:</strong> ${currentEmployee.code}</p>
+                        <p><strong>Vai trò:</strong> ${currentEmployee.role}</p>
+                        <p><strong>Ngày vào làm:</strong> ${currentEmployee.join_date}</p>
+                        <p><strong>Trạng thái:</strong> ${currentEmployee.active ? '✅ Đang làm việc' : '❌ Nghỉ việc'}</p>
+                    </div>
+                `;
+            } else {
+                employeeList.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">❌ Chưa đăng nhập</div>';
+            }
+        }
+
+        // View salary with better formatting
+        async function viewSalary() {
+            if (!currentEmployee) {
+                showMessage('reportContent', 'Chưa đăng nhập', 'error');
+                return;
+            }
+            
+            const reportContent = document.getElementById('reportContent');
+            reportContent.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><br>Đang tính toán...</div>';
+            
+            const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+            const salary = await apiCall(`/salary/${currentEmployee.id}/${currentMonth}`);
+            
+            if (salary && !salary.error) {
+                const base = parseFloat(salary.base_salary || 0);
+                const commission = parseFloat(salary.commission || 0);
+                const tips = parseFloat(salary.tip_total || 0);
+                const total = base + commission + tips;
+                
+                reportContent.innerHTML = `
+                    <div class="report-item">
+                        <h3>💰 Bảng lương tháng ${currentMonth}</h3>
+                        <div style="margin: 15px 0;">
+                            <p><strong>Lương cơ bản:</strong> ${formatMoney(base)}đ</p>
+                            <p><strong>Hoa hồng:</strong> ${formatMoney(commission)}đ</p>
+                            <p><strong>Tip:</strong> ${formatMoney(tips)}đ</p>
+                            <p><strong>Tổng số tour:</strong> ${salary.total_tours || 0} tour</p>
+                        </div>
+                        <hr style="margin: 15px 0; border: 1px solid #eee;">
+                        <h4 style="color: #4CAF50; font-size: 1.2em;">💵 Tổng cộng: ${formatMoney(total)}đ</h4>
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px;">
+                            <small>📊 Hoa hồng: ${salary.total_tours || 0} tour × 50,000đ = ${formatMoney(commission)}đ</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                reportContent.innerHTML = '<div class="report-item">❌ Không thể tải dữ liệu lương</div>';
+            }
+        }
+
+        // View attendance
+        function viewAttendance() {
+            document.getElementById('reportContent').innerHTML = `
+                <div class="report-item">
+                    <h3>📅 Báo cáo chấm công</h3>
+                    <p style="text-align: center; color: #666; margin: 20px 0;">
+                        🚧 Tính năng đang được phát triển...<br>
+                        Sẽ hiển thị lịch sử chấm công, số giờ làm việc, etc.
+                    </p>
+                    <div style="text-align: center;">
+                        <button class="btn" onclick="refreshDashboard()">📊 Xem thống kê hiện tại</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Format money with Vietnamese locale
+        function formatMoney(amount) {
+            return Math.round(parseFloat(amount || 0)).toLocaleString('vi-VN');
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateString = now.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit'
+            });
+            
+            document.getElementById('currentTime').textContent = `${timeString} ${dateString}`;
+        }
+
+        // Handle online/offline status
+        function updateOnlineStatus() {
+            const status = navigator.onLine ? 'online' : 'offline';
+            if (status === 'offline') {
+                showMessage('loginMessage', '📡 Đang offline - Một số tính năng có thể không hoạt động', 'error');
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // Handle back button on mobile
+        window.addEventListener('popstate', function(event) {
+            if (document.getElementById('mainApp').classList.contains('hidden')) {
+                // If on login screen, prevent back
+                history.pushState(null, '', window.location.pathname);
+            }
+        });
+
+        // Prevent zoom on mobile
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            updateOnlineStatus();
+            autoLogin();
+            
+            // Set up periodic refresh
+            setInterval(refreshCurrentScreen, 30000); // Refresh every 30 seconds
+            
+            console.log('🔑 Demo Login: EMP001 / 1234');
+            console.log('📱 PWA: Có thể cài đặt như app thật!');
+        });
+
+        // Handle Enter key on login form
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('loginScreen').classList.contains('hidden')) {
+                    login();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
